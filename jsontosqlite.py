@@ -1,6 +1,7 @@
 import sqlite3
 import json
 
+#Read data from JSON file and save it to Sqlite
 def save_to_sqlite3():
     with open("content.json", "r", encoding="utf-8") as f:
         content = json.load(f)

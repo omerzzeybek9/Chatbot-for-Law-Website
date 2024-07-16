@@ -43,7 +43,7 @@ def scrape_and_save():
 
 scrape_and_save()
 
-# Schedule the scraping task (Works every day at 1 a.m.)
+#Schedule the scraping task (Works every day at 1 a.m.)
 schedule.every().day.at("01:00").do(scrape_and_save)
 
 while True:
