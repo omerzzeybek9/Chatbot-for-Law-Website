@@ -21,7 +21,8 @@ def scrape_and_save():
     hrefs = [a.get("href") for a in a_tags if a.get("href")]
     hrefs = list(set(hrefs))
 
-    necessary_urls = [link for link in hrefs if "youtube" not in link and "category" not in link and link.startswith("http")]
+    necessary_urls = [link for link in hrefs if "youtube" not in link and "category" not in link  and "instagram" not in link
+                      and "twitter" not in link  and "facebook" not in link  and "linkedin" not in link and link.startswith("http")]
 
     content = {}
     for link in necessary_urls:
