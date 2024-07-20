@@ -5,29 +5,29 @@ from transformers import DataCollatorForLanguageModeling
 
 dataset = load_dataset("json", data_files="dataset.jsonl", split="train")
 
-# Veriyi eğitim ve değerlendirme için ayırma
+#Split dataset for evaluation and training
 train_test_split = dataset.train_test_split(test_size=0.1)
 train_dataset = train_test_split['train']
 eval_dataset = train_test_split['test']
 
-# Tokenizer ve Model
+# Tokenizer and Model
 tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-base-turkish-cased")
 model = AutoModelForCausalLM.from_pretrained("dbmdz/bert-base-turkish-cased")
 
-# Tokenize Function
+#Tokenize Function
 def tokenize_function(examples):
     return tokenizer(examples["text"], truncation=True, padding="max_length", max_length=512)
 
 train_dataset = train_dataset.map(tokenize_function, batched=True)
 eval_dataset = eval_dataset.map(tokenize_function, batched=True)
 
-# Data Collator
+#Data Collator
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
     mlm=False,
 )
 
-# Training Arguments
+#Training Arguments
 training_args = TrainingArguments(
     output_dir="./results",
     eval_strategy="epoch",
@@ -49,7 +49,7 @@ class CustomTrainer(Trainer):
         loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
         return (loss, outputs) if return_outputs else loss
 
-# Custom Trainer
+#Custom Trainer
 trainer = CustomTrainer(
     model=model,
     args=training_args,
@@ -58,7 +58,7 @@ trainer = CustomTrainer(
     data_collator=data_collator,
 )
 
-# Eğitimi Başlat
+#Start the training
 trainer.train()
 
 from transformers import pipeline
