@@ -1,18 +1,31 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
-tokenizer = AutoTokenizer.from_pretrained("./results")
-model = AutoModelForCausalLM.from_pretrained("./results")
+#Load model and tokenizer
+model_path = "./trained_model"
+tokenizer = AutoTokenizer.from_pretrained(model_path)
+model = AutoModelForCausalLM.from_pretrained(model_path)
 
-#Example input
-input_text = "Yapı kayıt belgesinin iptali davalarında anayasaya aykırılık iddiası nedir?"
+#Create Text Generation pipeline
+generator = pipeline('text-generation', model=model, tokenizer=tokenizer)
 
-#Tokenize input
-inputs = tokenizer(input_text, return_tensors="pt")
+#Chatbot
+def chat_with_bot(prompt):
+    prompt = (
+        "Sen bir hukuk websitesinin yapay zeka asistanısın. Sana öğrettiğim verilerle sorulara hukuki bir şekilde cevap ver. "
+        "Eğer yardım istenirse veya iletişim bilgisi istenirse iletişim bilgilerini ver.\n"
+        f"Kullanıcı: {user_input}\nYanıt:")
 
-#Run the model and get the output
-outputs = model.generate(**inputs, max_length=512, num_return_sequences=1)
+    response = generator(prompt, max_length=300, num_return_sequences=1, temperature=0.7, top_k=50, top_p=0.95)
+    generated_text = response[0]['generated_text']
 
-#Solve the output
-response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    answer = generated_text.replace(prompt, '').strip()
+    return answer
 
-print(response)
+
+#Take input and answer
+while True:
+    user_input = input("Soru: ")
+    if user_input.lower() in ["exit", "quit", "q"]:
+        break
+    response = chat_with_bot(user_input)
+    print(f"Cevap: {response}")
