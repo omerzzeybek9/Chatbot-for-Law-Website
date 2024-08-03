@@ -1,72 +1,53 @@
-from transformers import GPT2Tokenizer, GPT2LMHeadModel, Trainer, TrainingArguments
+import json
 from datasets import load_dataset
+from transformers import AutoTokenizer, DataCollatorWithPadding
 import torch
-from transformers import DataCollatorForLanguageModeling
+from transformers import AutoModelForSequenceClassification, Trainer, TrainingArguments
 
 #Load dataset
 dataset = load_dataset("json", data_files="cleaned_dataset.jsonl", split="train")
 
-#Split dataset into training and eval dataset
-train_test_split = dataset.train_test_split(test_size=0.1)
-train_dataset = train_test_split['train']
-eval_dataset = train_test_split['test']
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
-#Tokenizer and Model
-tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-model = GPT2LMHeadModel.from_pretrained("gpt2")
+def tokenize(example):
+    text = ' '.join(example['text'])
+    return tokenizer(text, truncation=True, padding='max_length', max_length=512)
 
-#Special Token
-tokenizer.pad_token = tokenizer.eos_token
+tokenized_dataset = dataset.map(tokenize, batched=False)
 
-#Tokenization function
-def tokenize_function(examples):
-    return tokenizer(examples["text"], truncation=True, padding="max_length", max_length=512)
+data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
-train_dataset = train_dataset.map(tokenize_function, batched=True)
-eval_dataset = eval_dataset.map(tokenize_function, batched=True)
+print(tokenized_dataset)
 
-#Data Collator
-data_collator = DataCollatorForLanguageModeling(
-    tokenizer=tokenizer,
-    mlm=False,
-)
+train_size = 0.8
+train_dataset = tokenized_dataset.shuffle(seed=42).select(range(int(len(tokenized_dataset) * train_size)))
+eval_dataset = tokenized_dataset.shuffle(seed=42).select(range(int(len(tokenized_dataset) * train_size), len(tokenized_dataset)))
 
-#Training args
+model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=2)
+
 training_args = TrainingArguments(
     output_dir="./results",
     evaluation_strategy="epoch",
     learning_rate=2e-5,
-    per_device_train_batch_size=4,
-    per_device_eval_batch_size=4,
+    per_device_train_batch_size=8,
+    per_device_eval_batch_size=8,
     num_train_epochs=3,
     weight_decay=0.01,
-    save_total_limit=2,
-    save_steps=500,
 )
 
-#Custom Trainer
-class CustomTrainer(Trainer):
-    def compute_loss(self, model, inputs, return_outputs=False):
-        labels = inputs.get("input_ids").to(model.device)
-        outputs = model(**inputs)
-        logits = outputs.get("logits")
-        loss_fct = torch.nn.CrossEntropyLoss()
-        shift_logits = logits[..., :-1, :].contiguous()
-        shift_labels = labels[..., 1:].contiguous()
-        loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
-        return (loss, outputs) if return_outputs else loss
 
-#Create Custom Trainer
-trainer = CustomTrainer(
+trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
     eval_dataset=eval_dataset,
+    tokenizer=tokenizer,
     data_collator=data_collator,
 )
 
+
 trainer.train()
 
-#Save model and tokenizer
-trainer.save_model("./trained_model")
-tokenizer.save_pretrained("./trained_model")
+
+model.save_pretrained("saved_model")
+tokenizer.save_pretrained("saved_tokenizer")

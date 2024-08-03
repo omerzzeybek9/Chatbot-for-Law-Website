@@ -10,13 +10,12 @@ def clean_text(text):
 
 def clean_dataset(dataset):
     def clean_example(example):
-        example['text'] = clean_text(example['text'])
+        example['text'] = [clean_text(t) for t in example['text']]
         return example
 
     return dataset.map(clean_example)
 
-
-dataset = load_dataset("json", data_files="dataset.jsonl", split="train")
+dataset = load_dataset("json", data_files="data.jsonl", split="train")
 
 cleaned_dataset = clean_dataset(dataset)
 
