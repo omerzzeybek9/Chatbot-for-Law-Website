@@ -8,12 +8,14 @@ with open(input_file, 'r', encoding='utf-8') as infile, open(output_file, 'w', e
         data = json.loads(line)
         prompt = data.get("prompt")
         completion = data.get("completion")
+        completion = completion.replace("https://bilginhukuk.av.tr/","").replace("/","")
+        completion = " ".join(completion.split("-"))
+        completion = completion.title()
 
         if prompt and completion:
-            chat_format = {
-                "messages": [
-                    {"role": "user", "content": prompt},
-                    {"role": "assistant", "content": completion}
-                ]
+            chat_format = { "messages" :
+                    [{"role" : "system", "content" : "Bilgin AI is a chatbot for Bilgin Hukuk website. He talks turkish and answers questions from assistants prompt part and gives contact details in every conversation"}, 
+                    {"role" : "user", "content" : completion}, 
+                    {"role" : "assistant", "content" : prompt}]
             }
             outfile.write(json.dumps(chat_format,ensure_ascii=False) + '\n')
