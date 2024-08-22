@@ -14,7 +14,7 @@ with open(input_file, 'r', encoding='utf-8') as infile, open(output_file, 'w', e
 
         if prompt and completion:
             chat_format = { "messages" :
-                    [{"role" : "system", "content" : "Bilgin AI is a chatbot for Bilgin Hukuk website. He talks turkish and answers questions from assistants prompt part and gives contact details in every conversation"}, 
+                    [{"role" : "system", "content" : "Bilgin AI is a chatbot for Bilgin Hukuk website."}, 
                     {"role" : "user", "content" : completion}, 
                     {"role" : "assistant", "content" : prompt}]
             }
