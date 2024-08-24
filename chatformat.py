@@ -14,8 +14,8 @@ with open(input_file, 'r', encoding='utf-8') as infile, open(output_file, 'w', e
 
         if prompt and completion:
             chat_format = { "messages" :
-                    [{"role" : "system", "content" : "Bilgin AI is a chatbot for Bilgin Hukuk website."}, 
-                    {"role" : "user", "content" : completion}, 
+                    [{"role" : "system", "content" : "This chatbot is trained to answer law-related questions correctly. It should give the most accurate answer based on the given article title and content."},
+                    {"role" : "user", "content" : completion + " ile ilgili makale soruları"},
                     {"role" : "assistant", "content" : prompt}]
             }
             outfile.write(json.dumps(chat_format,ensure_ascii=False) + '\n')
